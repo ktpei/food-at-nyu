@@ -65,9 +65,14 @@ const DiningMap = () => {
   return (
     <View style={{ flex: 1 }}>
       <MapView
-        provider={PROVIDER_GOOGLE}
+        //provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
-        initialRegion={NYU_REGION}
+        initialRegion={{
+            latitude: 40.7295,
+            longitude: -73.9965,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
         region={location || NYU_REGION}
       >
         {/* Add markers for dining halls */}
