@@ -14,8 +14,8 @@ export default function AppLayout() {
             iconName = focused ? 'map' : 'map-outline';
           } else if (route.name === 'dining') {
             iconName = focused ? 'restaurant' : 'restaurant-outline';
-          } else if (route.name === 'discounts') {
-            iconName = focused ? 'pricetag' : 'pricetag-outline';
+          } else if (route.name === 'explore') {
+            iconName = focused ? 'search' : 'search-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -28,7 +28,7 @@ export default function AppLayout() {
       <Tabs.Screen 
         name="dining" 
         options={{
-          title: "Dining Halls"
+          title: "Dining"
         }}
       />
       <Tabs.Screen 
@@ -38,9 +38,9 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen 
-        name="discounts" 
+        name="explore" 
         options={{
-          title: "Discounts"
+          title: "Explore"
         }}
       />
     </Tabs>

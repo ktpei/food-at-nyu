@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { StyleSheet, View, TouchableOpacity, Dimensions } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 
 // NYU Washington Square coordinates
 const NYU_REGION = {
@@ -11,7 +12,7 @@ const NYU_REGION = {
   longitudeDelta: 0.01,
 };
 
-// Sample data - replace with your actual data
+// Dining halls data
 const DINING_HALLS = [
   {
     id: 'palladium',
@@ -26,6 +27,7 @@ const DINING_HALLS = [
   },
 ];
 
+// discount places data
 const DISCOUNT_PLACES = [
   {
     id: 'starbucks',
@@ -42,6 +44,8 @@ const DISCOUNT_PLACES = [
 
 const DiningMap = () => {
   const [location, setLocation] = useState(null);
+  const [mapRegion, setMapRegion] = useState(NYU_REGION);
+  //const { diningHalls, discountsPlaces } = diningData;
 
   // Get user's current location
   useEffect(() => {
@@ -62,18 +66,18 @@ const DiningMap = () => {
     })();
   }, []);
 
+  // Function to reset map to NYU region
+  const resetToNYU = () => {
+    console.log('Resetting map to NYU')
+    setMapRegion(NYU_REGION);
+  };
+
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <MapView
-        //provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
-        initialRegion={{
-            latitude: 40.7295,
-            longitude: -73.9965,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-        region={location || NYU_REGION}
+        //initialRegion={NYU_REGION}
+        region={mapRegion}
       >
         {/* Add markers for dining halls */}
         {DINING_HALLS.map((hall) => (
@@ -96,6 +100,14 @@ const DiningMap = () => {
           />
         ))}
       </MapView>
+      
+      {/* Home button */}
+      <TouchableOpacity 
+        style={styles.homeButton}
+        onPress={resetToNYU}
+      >
+        <Ionicons name="home" size={24} color="#57068c" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -107,6 +119,19 @@ const styles = StyleSheet.create({
   map: {
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
+  },
+  homeButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: 'white',
+    borderRadius: 30,
+    padding: 12,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
 });
 
