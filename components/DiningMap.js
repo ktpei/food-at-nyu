@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,6 +45,8 @@ const DISCOUNT_PLACES = [
 const DiningMap = () => {
   const [location, setLocation] = useState(null);
   const [mapRegion, setMapRegion] = useState(NYU_REGION);
+  const mapRef = useRef(null);
+
   //const { diningHalls, discountsPlaces } = diningData;
 
   // Get user's current location
@@ -68,15 +70,17 @@ const DiningMap = () => {
 
   // Function to reset map to NYU region
   const resetToNYU = () => {
-    console.log('Resetting map to NYU')
-    setMapRegion(NYU_REGION);
+    console.log('Resetting map to NYU');
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(NYU_REGION, 500); // 1-second smooth animation
+    }
   };
 
   return (
     <View style={styles.container}>
       <MapView
+        ref={mapRef}
         style={{ flex: 1 }}
-        //initialRegion={NYU_REGION}
         region={mapRegion}
       >
         {/* Add markers for dining halls */}
