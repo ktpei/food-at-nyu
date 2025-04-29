@@ -43,3 +43,4 @@ app-example
 
 # firebase
 firestore-seed/
+GoogleService-Info.plist
