@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Dimensions } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
+import { getDiningHalls, getDiscountPlaces } from '../firebase/services';
+import { useRouter } from 'expo-router';
+import { FilterContext } from '../app/_layout';
 
 // NYU Washington Square coordinates
 const NYU_REGION = {
@@ -12,42 +15,34 @@ const NYU_REGION = {
   longitudeDelta: 0.01,
 };
 
-// Dining halls data
-const DINING_HALLS = [
-  {
-    id: 'palladium',
-    name: 'Palladium Dining Hall',
-    location: {
-      latitude: 40.7312,
-      longitude: -73.9902,
-    },
-    hours: '7:00 AM - 10:00 PM',
-    crowdedness: 'Medium',
-    type: 'dining_hall',
-  },
-];
-
-// discount places data
-const DISCOUNT_PLACES = [
-  {
-    id: 'starbucks',
-    name: 'Starbucks @ Kimmel',
-    location: {
-      latitude: 40.7295,
-      longitude: -73.9972,
-    },
-    hours: '7:00 AM - 9:00 PM',
-    discount: '10% off with NYU ID',
-    type: 'discount',
-  },
-];
-
 const DiningMap = () => {
   const [location, setLocation] = useState(null);
   const [mapRegion, setMapRegion] = useState(NYU_REGION);
+  const [diningHalls, setDiningHalls] = useState([]);
+  const [discountPlaces, setDiscountPlaces] = useState([]);
+  const { selected } = useContext(FilterContext);
+  const [loading, setLoading] = useState(true);
   const mapRef = useRef(null);
+  const router = useRouter();
 
-  //const { diningHalls, discountsPlaces } = diningData;
+  // Load data from Firebase
+  useEffect(() => {
+  const loadData = async () => {
+      try {
+      setLoading(true);
+      const halls = await getDiningHalls();
+      const places = await getDiscountPlaces();
+      setDiningHalls(halls);
+      setDiscountPlaces(places);
+      console.log('received firebase data', halls[0].location.latitude);
+      } catch (error) {
+      console.error('Error loading data:', error);
+      } finally {
+      setLoading(false);
+      }
+  };
+  loadData();
+  }, []);
 
   // Get user's current location
   useEffect(() => {
@@ -72,7 +67,7 @@ const DiningMap = () => {
   const resetToNYU = () => {
     console.log('Resetting map to NYU');
     if (mapRef.current) {
-      mapRef.current.animateToRegion(NYU_REGION, 500); // 1-second smooth animation
+      mapRef.current.animateToRegion(NYU_REGION, 500); // half-second smooth animation
     }
   };
 
@@ -81,28 +76,61 @@ const DiningMap = () => {
       <MapView
         ref={mapRef}
         style={{ flex: 1 }}
-        region={mapRegion}
+        initialRegion={mapRegion}
       >
-        {/* Add markers for dining halls */}
-        {DINING_HALLS.map((hall) => (
-          <Marker
+        {/* show dining halls if filter is 'dining' or 'all' */}
+        {(selected === 'dining' || selected === 'all') &&
+          diningHalls.map(hall => (
+            <Marker
             key={hall.id}
-            coordinate={hall.location}
-            title={hall.name}
-            description={`Hours: ${hall.hours}\nCrowdedness: ${hall.crowdedness}`}
-          />
-        ))}
-
-        {/* Add markers for discount places */}
-        {DISCOUNT_PLACES.map((place) => (
-          <Marker
+            coordinate={{
+              latitude: hall.location.latitude,
+              longitude: hall.location.longitude,
+            }}
+            onCalloutPress={() =>
+              router.push({
+                pathname: '/dining/[id]',
+                params: { id: hall.id, type: 'dining_hall' },
+              })
+            }
+          >
+            <Callout>
+              <View style={styles.calloutContainer}>
+                <Text style={styles.calloutTitle}>{hall.name}</Text>
+                <Text style={styles.calloutText}>Hours: {hall.hours}</Text>
+              </View>
+            </Callout>
+          </Marker>
+          ))
+        }
+        
+        {(selected === 'discounts' || selected === 'all') &&
+          discountPlaces.map(place => (
+            <Marker
             key={place.id}
-            coordinate={place.location}
-            title={place.name}
-            description={`Hours: ${place.hours}\nDiscount: ${place.discount}`}
-            pinColor="green" // Different color for discount places
-          />
-        ))}
+            coordinate={{
+              latitude: place.location.latitude,
+              longitude: place.location.longitude,
+            }}
+            pinColor="green"
+            onCalloutPress={() =>
+              router.push({
+                pathname: '/dining/[id]',
+                params: { id: place.id, type: 'discount_place' },
+              })
+            }
+          >
+            <Callout>
+              <View style={styles.calloutContainer}>
+                <Text style={styles.calloutTitle}>{place.name}</Text>
+                <Text style={styles.calloutText}>Hours: {place.hours} Discount: {place.discount}%</Text>
+              </View>
+            </Callout>
+          </Marker>
+          ))
+        }
+
+      
       </MapView>
       
       {/* Home button */}
@@ -117,6 +145,9 @@ const DiningMap = () => {
 };
 
 const styles = StyleSheet.create({
+  calloutContainer: { width: 180, padding: 4 },
+  calloutTitle: { fontSize: 16, marginBottom: 4 },
+  calloutText: { fontSize: 12, marginBottom: 2 },
   container: {
     flex: 1,
   },
